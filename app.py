@@ -2,6 +2,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
+import dash_bootstrap_components as dbc
 import visdcc
 import plotly.express as px
 import dash_table
@@ -9,7 +10,7 @@ import pandas as pd
 import pickle
 import networkx as nx
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+external_stylesheets = [dbc.themes.BOOTSTRAP]
 
 with open('ani_recs.pickle', 'rb') as handle:
     ani_recs = pickle.load(handle)
@@ -23,31 +24,56 @@ df = pd.DataFrame({
 })
 
 def generate_html_table(df):
+    #table = dbc.Table.from_dataframe(df, striped=True, bordered=True, hover=True)
+
+    table_header = [html.Tr([html.Th(col) for col in df.columns])]
+    table_body = [html.Tr([
+        html.Td(df.iloc[i][col]) for col in df.columns
+    ]) for i in range(len(df))]
+    table = dbc.Table(
+        # using the same table as in the above example
+        table_header + table_body,
+        bordered=True,
+        dark=True,
+        hover=True,
+        responsive=True,
+        striped=True,
+    )
+    return table
+    """
     return html.Table(
         # Header
         [html.Tr([html.Th(col) for col in df.columns])] +
         # Body
         [html.Tr([
             html.Td(df.iloc[i][col]) for col in df.columns
-        ]) for i in range(len(df))])
+        ]) for i in range(len(df))], style={
+        'textAlign': 'center',
+        'border': '1px solid red',
+    })
+    """
 
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 app.layout = html.Div([
-    visdcc.Network(id = 'net', selection = {'nodes':[], 'edges':[]}, options = dict(height= '600px',
+    dbc.Row(
+        [
+            dbc.Col(html.Div(dcc.Dropdown(id = "Dropdown",
+                options=[{'label': i, 'value': i} for i in df['AniList'].unique()],
+                value = "All")), width=3),
+            dbc.Col(visdcc.Network(id = 'net', selection = {'nodes':[], 'edges':[]}, options = dict(height= '600px',
                                                 width= '100%',
                                                 physics = {"forceAtlas2Based": {"springLength": 100},
                                                            "minVelocity": 0.75,"solver": "forceAtlas2Based"},
                                                 interaction = {"hover": True,
                                                                 "keyboard": {"enabled": True},
-                                                               "navigationButtons": True})),
+                                                               "navigationButtons": True})), width =9),
+        ]),
     html.Div(id = 'nodes'),
     html.Div(id = 'edges'),
-    html.Div(id = 'dt', style = {'width': '40%'}),
-    dcc.Dropdown(id = "Dropdown",
-                options=[{'label': i, 'value': i} for i in df['AniList'].unique()],
-                value = "All")
+    html.Div(id = 'dt'),
+
 ])
 
 @app.callback(
@@ -98,15 +124,17 @@ def edgefunc(x):
 def createDT(x):
     node = x['nodes'][0]
     neighbors = g[node]
+    """
     if(node in ani_recs.keys()):
         recs_total = [ani_recs[node][n] for n in list(neighbors)]
         data = {'Recommendations': list(neighbors), '# Recs': recs_total}
         df = pd.DataFrame(data)
         return generate_html_table(df)
-    else:
-        data = {'Recommendations': list(neighbors)}
-        df = pd.DataFrame(data)
-        return generate_html_table(df)
+    """
+    data = {'Recommendations': list(neighbors)}
+    df = pd.DataFrame(data)
+    #table = dbc.Table.from_dataframe(df, striped=True, bordered=True, hover=True)
+    return generate_html_table(df)
 
 if __name__ == '__main__':
     app.run_server(debug=True)
