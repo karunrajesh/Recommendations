@@ -14,8 +14,12 @@ external_stylesheets = [dbc.themes.BOOTSTRAP]
 
 with open('ani_recs.pickle', 'rb') as handle:
     ani_recs = pickle.load(handle)
+with open('watch_on.pickle', 'rb') as handle:
+    watch_on = pickle.load(handle)
+with open('ani_recs_new.pickle', 'rb') as handle:
+    ani_recs_new = pickle.load(handle)
 
-g = nx.Graph(ani_recs)
+g = nx.Graph(ani_recs_new)
 animes = list(g.nodes())
 animes.append("All")
 
@@ -124,6 +128,9 @@ def edgefunc(x):
 def createDT(x):
     node = x['nodes'][0]
     neighbors = g[node]
+
+    total_list = [watch_on[n] for n in neighbors]
+
     """
     if(node in ani_recs.keys()):
         recs_total = [ani_recs[node][n] for n in list(neighbors)]
@@ -131,7 +138,7 @@ def createDT(x):
         df = pd.DataFrame(data)
         return generate_html_table(df)
     """
-    data = {'Recommendations': list(neighbors)}
+    data = {'Recommendations': list(neighbors), 'Watch At': total_list}
     df = pd.DataFrame(data)
     #table = dbc.Table.from_dataframe(df, striped=True, bordered=True, hover=True)
     return generate_html_table(df)
