@@ -10,7 +10,7 @@ import pandas as pd
 import pickle
 import networkx as nx
 
-external_stylesheets = [dbc.themes.BOOTSTRAP]
+external_stylesheets = [dbc.themes.CYBORG]
 
 with open('ani_recs.pickle', 'rb') as handle:
     ani_recs = pickle.load(handle)
@@ -21,7 +21,8 @@ with open('ani_recs_new.pickle', 'rb') as handle:
 
 g = nx.Graph(ani_recs_new)
 animes = list(g.nodes())
-animes.append("All")
+animes.insert(0,"All")
+
 
 df = pd.DataFrame({
     'AniList': animes
@@ -60,25 +61,32 @@ def generate_html_table(df):
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-app.layout = html.Div([
+app.layout = dbc.Container(
+    [
+    html.H1("Anime Recommendation Selector"),
+    html.Hr(),
+    html.Div([
     dbc.Row(
         [
-            dbc.Col(html.Div(dcc.Dropdown(id = "Dropdown",
+            dbc.Col(dbc.Container([html.Div(dcc.Dropdown(id = "Dropdown",
                 options=[{'label': i, 'value': i} for i in df['AniList'].unique()],
-                value = "All")), width=3),
+                value = "All")),
+                html.Div(id = 'dt')]),width=5),
             dbc.Col(visdcc.Network(id = 'net', selection = {'nodes':[], 'edges':[]}, options = dict(height= '600px',
                                                 width= '100%',
                                                 physics = {"forceAtlas2Based": {"springLength": 100},
                                                            "minVelocity": 0.75,"solver": "forceAtlas2Based"},
                                                 interaction = {"hover": True,
                                                                 "keyboard": {"enabled": True},
-                                                               "navigationButtons": True})), width =9),
+                                                               "navigationButtons": True,
+                                                               "selectConnectedEdges": False})), width =7),
         ]),
     html.Div(id = 'nodes'),
-    html.Div(id = 'edges'),
-    html.Div(id = 'dt'),
-
-])
+    html.Div(id = 'edges'),])
+    #html.Div(id = 'dt'),])
+    ],
+    fluid=True,
+)
 
 @app.callback(
     Output('net', 'data'),
@@ -128,9 +136,8 @@ def edgefunc(x):
 def createDT(x):
     node = x['nodes'][0]
     neighbors = g[node]
-
-    total_list = [watch_on[n] for n in neighbors]
-
+    spacer = ", "
+    total_list = [spacer.join(watch_on[n]) for n in neighbors]
     """
     if(node in ani_recs.keys()):
         recs_total = [ani_recs[node][n] for n in list(neighbors)]
