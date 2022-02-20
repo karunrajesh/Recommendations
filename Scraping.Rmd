@@ -18,7 +18,7 @@ c("Attack on Titan",
 
 
 # R Web Scraping Google (Can only up to 8/hour)
-url <- paste0("https://www.google.com/search?q=", "Attack on Titan", "MAL")
+url <- paste0("http://proximityone.com/zipdp1.htm#using")
 
 page <- URLencode(url)
 
@@ -27,8 +27,8 @@ first_page <- read_html(page)
 links <- first_page %>% html_nodes(xpath='//a') %>% html_attr('href')
 ani_link <- gsub('/url\\?q=','',sapply(strsplit(links[as.vector(grep('url',links))],split='&'),'[',1))[1]
 ani_link <- paste0(ani_link, "/userrecs")
-h <- read_html(ani_link)
-recipe <- h %>% html_nodes("#content div:nth-child(2) strong") %>% html_text()
+h <- read_html(page)
+recipe <- h %>% html_nodes("#aw52-view-box span") %>% html_text()
 ingred <- h %>% html_nodes(".js-similar-recommendations-button strong") %>% html_text()
 ```
 

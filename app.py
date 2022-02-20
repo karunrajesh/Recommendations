@@ -10,7 +10,7 @@ import pandas as pd
 import pickle
 import networkx as nx
 
-external_stylesheets = [dbc.themes.CYBORG]
+external_stylesheets = [dbc.themes.FLATLY]
 
 with open('ani_recs.pickle', 'rb') as handle:
     ani_recs = pickle.load(handle)
@@ -79,7 +79,8 @@ app.layout = dbc.Container(
                                                 interaction = {"hover": True,
                                                                 "keyboard": {"enabled": True},
                                                                "navigationButtons": True,
-                                                               "selectConnectedEdges": False})), width =7),
+                                                               "selectConnectedEdges": False},
+                                                layout = {"improvedLayout":True})), width =7),
         ]),
     html.Div(id = 'nodes'),
     html.Div(id = 'edges'),])
@@ -149,6 +150,10 @@ def createDT(x):
     df = pd.DataFrame(data)
     #table = dbc.Table.from_dataframe(df, striped=True, bordered=True, hover=True)
     return generate_html_table(df)
+
+# Create function for tags
+
+# Create function for anime description
 
 if __name__ == '__main__':
     app.run_server(debug=True)
