@@ -360,9 +360,9 @@ my_cse_id = "7191dc5676ef525ac"
 
 #ani_recs = dict()
 ### Reading in streaming list and creating anime_names list from that, decided to pickle to make process easier.
-#stream_list = pd.read_pickle(r'anime_streaming.pickle')
-#stream = {re.sub('\*|!|:|-|\+|\.|\?|\^|\$|\(|\)|\[|\]|\{|\}', '', x): v
-#     for x, v in stream_list.items()}
+stream_list = pd.read_pickle(r'anime_streaming.pickle')
+stream = {re.sub('\*|!|:|-|\+|\.|\?|\^|\$|\(|\)|\[|\]|\{|\}', '', x): v
+     for x, v in stream_list.items()}
 
 #ani_list = list(stream.keys())
 #pickle_list(ani_list, 'anime_names.pickle')
