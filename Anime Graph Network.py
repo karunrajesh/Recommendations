@@ -230,7 +230,7 @@ def clean_url(url):
 def get_mal_sites(anime_list):
     ani_number = 0
     # Change save_state to save_state google api stopped at
-    save_state = 12
+    save_state = 22
     i_start = (save_state - 1) * 50
     for i in range(i_start, len(anime_list), 50):
         if(i == range(0, len(anime_list), 50)[-1]):
