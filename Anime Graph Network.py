@@ -230,7 +230,7 @@ def clean_url(url):
 def get_mal_sites(anime_list):
     ani_number = 0
     # Change save_state to save_state google api stopped at
-    save_state = 24
+    save_state = 25
     i_start = (save_state - 1) * 50
     for i in range(i_start, len(anime_list), 50):
         if(i == range(0, len(anime_list), 50)[-1]):
@@ -238,8 +238,8 @@ def get_mal_sites(anime_list):
         else:
             short_anime_list = anime_list[i: i + 50]
         print(short_anime_list)
+        ani_recs = {}
         for anime in short_anime_list:
-            ani_recs = {}
             #if(ani_number % 50 == 0):
             #    print("Going to sleep")
             #    time.sleep(3600 - time.time() % 3600)
@@ -253,6 +253,7 @@ def get_mal_sites(anime_list):
                 ani_recs[anime_name] = [url,anime_stream]
                 ani_number += 1
                 print(anime_name, ani_number, save_state)
+        print(ani_recs)
         pickle_list(ani_recs, "anime_mal_sites_{}.pickle".format(save_state))
         save_state += 1
     #return ani_recs
