@@ -52,19 +52,21 @@ def time_log(func):
         time_end = dt.datetime.now()
         print(f"Function Took: {time_end - time_start}")
         return result
+
     return wrapper
+
 
 # Gets google search page, given search term (CHANGED 01/17)
 # Example of google_search usage
-#results = google_search("Attack on Titan MAL", my_api_key, my_cse_id)
+# results = google_search("Attack on Titan MAL", my_api_key, my_cse_id)
 @time_log
 def google_search(search_term, api_key, cse_id, **kwargs):
     service = build("customsearch", "v1", developerKey=api_key)
     res = service.cse().list(q=search_term, cx=cse_id, **kwargs).execute()
     url = res["items"][0]["link"]
-    #url = url + "/userrecs"
+    # url = url + "/userrecs"
     return url
-        
+
 
 # Scrapes the description page from the MAL Details page for the given anime
 # Example: 
@@ -76,13 +78,16 @@ soup = BeautifulSoup(resp.content, parser)
 description = soup.select(".pb16~ p")
 print(description[0].text)
 """
+
+
 @time_log
 def check_if_anime(link):
-    #check_list = ["myanimelist.net/anime"]
-    if("myanimelist.net/anime" in link):
+    # check_list = ["myanimelist.net/anime"]
+    if ("myanimelist.net/anime" in link):
         return True
     else:
         return False
+
 
 @time_log
 def get_description(link):
@@ -90,24 +95,27 @@ def get_description(link):
     parser = 'html.parser'
     soup = BeautifulSoup(resp.content, parser)
     description = soup.select(".pb16~ p")
-    text_description = description[0].text
-    #print(text_description)
+    try:
+        text_description = description[0].text
+    except:
+        text_description = "No description"
+    # print(text_description)
     return text_description
 
 
 # Scrapes the recommendation page from the MAL User Recommendation page for the given anime (CHANGED 01/17/21)
-#@time_log
+# @time_log
 def get_name(link):
     resp = requests.get(link)
     parser = 'html.parser'  # or 'lxml' (preferred) or 'html5lib', if installed
     soup = BeautifulSoup(resp.content, parser)
-    if(soup.select(".title-inherit")):
+    if (soup.select(".title-inherit")):
         name = soup.select(".title-inherit")
     else:
         name = soup.select(".h1_bold_none strong")
-    
+
     nm = name[0].text
-    #print(nm)
+    # print(nm)
     return nm
 
 
@@ -120,78 +128,79 @@ def get_anime_details(link):
     # get everything from information section
     info = [".spaceit_pad:nth-child({})".format(i) for i in range(6, 30)]
     cat = [soup.select(d) for d in info]
-    #ct = cat[0].text
+    # ct = cat[0].text
     episodes = ''
     genres = ''
     season = ''
+    themes = ''
     for item in cat:
-        if(item):
-            print(item[0].text)
-            if("Episode" in item[0].text):
+        if item:
+            # print(item[0].text)
+            if ("Episode" in item[0].text):
                 sentence = ' '.join(item[0].text.split())
                 episodes = extract_info(sentence, "Episodes")
-            if("Genre" in item[0].text):
+            if ("Genre" in item[0].text):
                 sentence = ' '.join(item[0].text.split())
                 genres = extract_info(sentence, "Genre")
-            if("Premiered" in item[0].text):
+            if ("Premiered" in item[0].text):
                 sentence = ' '.join(item[0].text.split())
                 season = extract_info(sentence, "Premiered")
             # Store theme for case when genre isn't available
-            if("Theme" in item[0].text):
+            if ("Theme" in item[0].text):
                 sentence = ' '.join(item[0].text.split())
                 themes = extract_info(sentence, "Theme")
     # check if anime has genre listed on MAL, if not use themes instead
-    if(genres == ''):
+    if ((genres == '') & (themes != '')):
         genres = themes
     return [episodes, genres, season]
 
 
 def extract_info(sidebar_str, info_type):
-    if(info_type == "Episodes"):
+    if (info_type == "Episodes"):
         cleaned_str = re.findall(r"Episodes: (.*)$", sidebar_str)[0]
         return cleaned_str
-    if(info_type == "Genre"):
-        if("Genres:" in sidebar_str):
+    if (info_type == "Genre"):
+        if ("Genres:" in sidebar_str):
             cleaned_str = re.findall(r"Genres: (.*)$", sidebar_str)[0]
             genre_list = cleaned_str.split(",")
             updated_list = [re.findall(r"([A-Z].*)[A-Z]", genre)[0] for genre in genre_list]
             return updated_list
-        elif("Genre:" in sidebar_str):
+        elif ("Genre:" in sidebar_str):
             cleaned_str = re.findall(r"Genre: (.*)$", sidebar_str)[0]
             updated_list = [re.findall(r"([A-Z].*)[A-Z]", cleaned_str)[0]]
             return updated_list
         else:
             return ""
-    if(info_type == "Theme"):
-        if("Themes:" in sidebar_str):
+    if (info_type == "Theme"):
+        if ("Themes:" in sidebar_str):
             cleaned_str = re.findall(r"Themes: (.*)$", sidebar_str)[0]
             genre_list = cleaned_str.split(",")
             updated_list = [re.findall(r"([A-Z].*)[A-Z]", genre)[0] for genre in genre_list]
             return updated_list
-        elif("Theme:" in sidebar_str):
+        elif ("Theme:" in sidebar_str):
             cleaned_str = re.findall(r"Theme: (.*)$", sidebar_str)[0]
             updated_list = [re.findall(r"([A-Z].*)[A-Z]", cleaned_str)[0]]
             return updated_list
         else:
             return ""
-    if(info_type == "Premiered"):
+    if (info_type == "Premiered"):
         cleaned_str = re.findall(r"Premiered: (.*)$", sidebar_str)[0]
         return cleaned_str
     return "Nothing Found"
-    
+
 
 # Gets Anime List for Given Service
-#@time_log
+# @time_log
 def get_stream(anime_name):
-    if(difflib.get_close_matches(anime_name, stream.keys(), n = 1, cutoff = 0.8)):
-        anime_match = difflib.get_close_matches(anime_name, stream.keys(), n = 1, cutoff = 0.8)[0]
+    if (difflib.get_close_matches(anime_name, stream.keys(), n=1, cutoff=0.8)):
+        anime_match = difflib.get_close_matches(anime_name, stream.keys(), n=1, cutoff=0.8)[0]
         stream_services = stream[anime_match]
     else:
         stream_services = []
-    #print(stream_services)
+    # print(stream_services)
     return stream_services
 
-                
+
 # Gets the recommendations from other MAL users, needs to be >threshold to add recommendation
 # Total_votes is the votes for those that have >= threshold, and then rec_links just takes up to the len of total_votes
 @time_log
@@ -200,19 +209,19 @@ def get_rec_links(rec_url, threshold):
     parser = 'html.parser'  # or 'lxml' (preferred) or 'html5lib', if installed
     soup = BeautifulSoup(resp.content, parser)
     votes = soup.select(".js-similar-recommendations-button strong")
-    total_votes = [int(i.text) for i in votes if int(i.text)>=threshold]
+    total_votes = [int(i.text) for i in votes if int(i.text) >= threshold]
     l = list()
     check = 0
     for link in soup.find_all('a', href=True):
-        if(str(link['href']).startswith("/myrecommendations")):
+        if (str(link['href']).startswith("/myrecommendations")):
             check = 1
-            #print("I work")
-        if(check == 1):
-            if(link['href'] == "https://myanimelist.net/topanime.php"):
+            # print("I work")
+        if (check == 1):
+            if (link['href'] == "https://myanimelist.net/topanime.php"):
                 break
             z = re.search("https://myanimelist\.net/anime/\d*/(.*)$", link['href'])
-            if(z):
-                if(link["href"] not in l):
+            if (z):
+                if (link["href"] not in l):
                     l.append(link["href"])
     rec_links = l[0:len(total_votes)]
     rec_names = [[get_name(a), a] for a in rec_links]
@@ -220,12 +229,13 @@ def get_rec_links(rec_url, threshold):
 
 
 # Cleans url if it has any mistakes in it
-#@time_log
+# @time_log
 def clean_url(url):
     if "?" in url:
         cleaned_url = re.findall(r"(.*)\?", url)
         return cleaned_url
     return url
+
 
 def get_mal_sites(anime_list):
     ani_number = 0
@@ -233,67 +243,73 @@ def get_mal_sites(anime_list):
     save_state = 25
     i_start = (save_state - 1) * 50
     for i in range(i_start, len(anime_list), 50):
-        if(i == range(0, len(anime_list), 50)[-1]):
+        if (i == range(0, len(anime_list), 50)[-1]):
             short_anime_list = anime_list[i:len(anime_list)]
         else:
             short_anime_list = anime_list[i: i + 50]
         print(short_anime_list)
         ani_recs = {}
         for anime in short_anime_list:
-            #if(ani_number % 50 == 0):
+            # if(ani_number % 50 == 0):
             #    print("Going to sleep")
             #    time.sleep(3600 - time.time() % 3600)
             anime_search = anime + " MyAnimeList"
             url = google_search(anime_search, my_api_key, my_cse_id)
             url = clean_url(url)
-            if(check_if_anime(url)):
-                #print(url)
+            if (check_if_anime(url)):
+                # print(url)
                 anime_name = get_name(url)
                 anime_stream = get_stream(anime)
-                ani_recs[anime_name] = [url,anime_stream]
+                ani_recs[anime_name] = [url, anime_stream]
                 ani_number += 1
                 print(anime_name, ani_number, save_state)
         print(ani_recs)
         pickle_list(ani_recs, "anime_mal_sites_{}.pickle".format(save_state))
         save_state += 1
-    #return ani_recs
+    # return ani_recs
+
 
 # Runner function
 @time_log
-def anime_runner(anime_list, ani_recs):
+def anime_runner(anime_list):
+    ani_recs = dict()
     full_recs = []
-    for anime in anime_list:
-        anime_search = anime + " MyAnimeList"
-        url = google_search(anime_search, my_api_key, my_cse_id)
-        #print(url)
-        url = clean_url(url)
-        #print(url)
-        anime_name = get_name(url)
+    i = 1
+    print("Number of anime to go through: ", len(anime_list))
+    for anime in anime_list.keys():
+        # anime_search = anime + " MyAnimeList"
+        # url = google_search(anime_search, my_api_key, my_cse_id)
+        # print(url)
+        # url = clean_url(url)
+        # print(url)
+        url, anime_stream = anime_list[anime]
+        # anime_name = get_name(url)
         anime_description = get_description(url)
         anime_episodes, anime_genres, anime_season = get_anime_details(url)
-        #print(anime_episodes, anime_genres, anime_season)
-        anime_stream = get_stream(anime)
-        #Create separate list for the recommended list and then go through same process without get_recs to create profile for 
+        # print(anime_episodes, anime_genres, anime_season)
+        # anime_stream = get_stream(anime)
+        # Create separate list for the recommended list and then go through same process without get_recs to create profile for
         recs_url = url + "/userrecs"
         anime_recs_url = get_rec_links(recs_url, 10)
-        anime_recs = [name for name,url in anime_recs_url]
-        #print(anime_recs)
-        #break
+        anime_recs = [name for name, url in anime_recs_url]
+        # print(anime_recs)
+        # break
         full_recs.extend(anime_recs_url)
-        ani_recs[anime_name] = [anime_description, anime_episodes, anime_genres, anime_season, anime_stream, anime_recs]
+        ani_recs[anime] = [anime_description, anime_episodes, anime_genres, anime_season, anime_stream, anime_recs]
+        print("Done: {} {}".format(anime, i))
+        i += 1
     print(full_recs)
-    for anime,url in full_recs:
+    for anime, url in full_recs:
         if anime not in ani_recs.keys():
-            #print(anime)
+            # print(anime)
             anime_description = get_description(url)
             anime_episodes, anime_genres, anime_season = get_anime_details(url)
-            anime_stream = get_stream(anime)
+            anime_stream = "unavailable"
             recs_url = url + "/userrecs"
             anime_recs_url = get_rec_links(recs_url, 10)
-            anime_recs = [name for name,url in anime_recs_url]
+            anime_recs = [name for name, url in anime_recs_url]
             ani_recs[anime] = [anime_description, anime_episodes, anime_genres, anime_season, anime_stream, anime_recs]
     return ani_recs
-
 
 
 # Pickle and store object
@@ -312,15 +328,15 @@ def pickle_list(df, file_name):
 @time_log
 def create_ani_network(ani_recs):
     nx_obj = nx.Graph(ani_recs)
-    #print("Fate Zero" in list(nx_obj.nodes()))
-    #nx_obj.edges()
-    #for edge in nx_obj.edges():
-        #print(edge[0], edge[1])
-        #print(ani_recs[edge[0]][edge[1]])
-    #nx_obj.nodes['title'] = list(nx_obj.nodes())
-    g = Network(height = 800, width = 800, notebook = True)
-    #g.toggle_hide_edges_on_drag(False)
-    #g.barnes_hut()
+    # print("Fate Zero" in list(nx_obj.nodes()))
+    # nx_obj.edges()
+    # for edge in nx_obj.edges():
+    # print(edge[0], edge[1])
+    # print(ani_recs[edge[0]][edge[1]])
+    # nx_obj.nodes['title'] = list(nx_obj.nodes())
+    g = Network(height=800, width=800, notebook=True)
+    # g.toggle_hide_edges_on_drag(False)
+    # g.barnes_hut()
     g.from_nx(nx.Graph(ani_recs))
     g.set_options("""
     var options = {
@@ -355,24 +371,29 @@ def create_ani_network(ani_recs):
 
     return g
 
+
 # API and Search Keys
 my_api_key = "AIzaSyBRvu5CNwemS1HV3IcQ1bcCnfS30yUaiEM"
 my_cse_id = "7191dc5676ef525ac"
 
-#ani_recs = dict()
+mal_sites = pd.read_pickle(r'mal_pickles/full_mal_list.pickle')
+
+ani_recs = anime_runner(mal_sites)
+
+pickle_list(ani_recs, r'ani_recs_full_05_08.pickle')
 ### Reading in streaming list and creating anime_names list from that, decided to pickle to make process easier.
-stream_list = pd.read_pickle(r'anime_streaming.pickle')
-stream = {re.sub('\*|!|:|-|\+|\.|\?|\^|\$|\(|\)|\[|\]|\{|\}', '', x): v
-     for x, v in stream_list.items()}
+# stream_list = pd.read_pickle(r'anime_streaming.pickle')
+# stream = {re.sub('\*|!|:|-|\+|\.|\?|\^|\$|\(|\)|\[|\]|\{|\}', '', x): v
+#      for x, v in stream_list.items()}
 
-#ani_list = list(stream.keys())
-#pickle_list(ani_list, 'anime_names.pickle')
-ani_list = pd.read_pickle(r'anime_names.pickle')
+# ani_list = list(stream.keys())
+# pickle_list(ani_list, 'anime_names.pickle')
+# ani_list = pd.read_pickle(r'anime_names.pickle')
+#
+#
+# get_mal_sites(ani_list)
 
-
-get_mal_sites(ani_list)
-
-#pickle_list(ani_recs, "anime_mal_sites.pickle")
+# pickle_list(ani_recs, "anime_mal_sites.pickle")
 
 
 # In[31]:
@@ -381,8 +402,8 @@ get_mal_sites(ani_list)
 # Problem Children: My Hero Academia, Jojos
 # My hero academia search term only pulls up season 3 result first for some reason, so manually input it
 # For some reason, jojo's adds ?suggestion= into the url, manually input it
-#url = google_search("Jojo's Bizzare Adventure MAL", my_api_key, my_cse_id)
-#print(url)
+# url = google_search("Jojo's Bizzare Adventure MAL", my_api_key, my_cse_id)
+# print(url)
 
 
 # ## Anime Network Example 
@@ -390,8 +411,8 @@ get_mal_sites(ani_list)
 # In[20]:
 
 
-#g = create_ani_network(ani_recs)
-#g.show("ex.html")
+# g = create_ani_network(ani_recs)
+# g.show("ex.html")
 
 
 # ##  Pickling Objects
@@ -399,8 +420,8 @@ get_mal_sites(ani_list)
 # In[ ]:
 
 
-#pickle_list(ani_recs, "anime_recs.pickle")
-#pickle_list(watch_on, "stream_service.pickle")
+# pickle_list(ani_recs, "anime_recs.pickle")
+# pickle_list(watch_on, "stream_service.pickle")
 
 
 # In[ ]:
@@ -529,4 +550,3 @@ watch_on
 #reel good doesn't have a lot of anime on it, 
 #so get more comprehensive lists (probably just for netflix, crunchyroll, and funimation)
 """
-
